@@ -1,0 +1,3244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- ANTI-COPY META TAGS -->
+<meta name="copyright" content="WGs+ Space Edition - All rights reserved">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;">
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Wgs+ Reborn</title>
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+<!-- Emoji Picker -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/emoji-picker-element@1.13.0/dist/style.css" />
+<script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1.13.0/index.js"></script>
+<style>
+/* ===== SPACE THEME VARIABLES ===== */
+:root {
+  /* Space Theme (Default) */
+  --primary-color: #0a0e29;
+  --secondary-color: #1a237e;
+  --accent-color: #00e5ff;
+  --bg-color: #000010;
+  --text-color: #ffffff;
+  --card-bg: rgba(10, 14, 41, 0.85);
+  --chat-bg: rgba(26, 35, 126, 0.2);
+  --nav-bg: rgba(10, 14, 41, 0.9);
+  --shadow-color: rgba(0, 229, 255, 0.3);
+  --border-color: rgba(0, 229, 255, 0.4);
+  --star-color: #ffffff;
+}
+
+[data-theme="dark-space"] {
+  /* Dark Space Theme */
+  --primary-color: #0f0f23;
+  --secondary-color: #1a1a2e;
+  --accent-color: #00ff9d;
+  --bg-color: #050510;
+  --text-color: #e0e0ff;
+  --card-bg: rgba(15, 15, 35, 0.85);
+  --chat-bg: rgba(26, 26, 46, 0.3);
+  --nav-bg: rgba(15, 15, 35, 0.9);
+  --shadow-color: rgba(0, 255, 157, 0.3);
+  --border-color: rgba(0, 255, 157, 0.4);
+  --star-color: #e0e0ff;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Segoe UI', Arial, sans-serif}
+
+/* Apply theme variables */
+body {
+  background: var(--bg-color);
+  color: var(--text-color);
+  transition: background 0.5s ease, color 0.5s ease;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Space Background Animation */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+@keyframes shootingStar {
+  0% {
+    transform: translateX(-100px) translateY(-100px) rotate(45deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(calc(100vw + 100px)) translateY(calc(100vh + 100px)) rotate(45deg);
+    opacity: 0;
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-20px) scale(1.05); }
+}
+
+@keyframes pulse {
+  0% { opacity: 0.8; }
+  50% { opacity: 1; }
+  100% { opacity: 0.8; }
+}
+
+@keyframes glow {
+  from { text-shadow: 0 0 5px var(--accent-color); }
+  to { text-shadow: 0 0 15px var(--accent-color), 0 0 20px var(--accent-color); }
+}
+
+/* Space Elements */
+.star {
+  position: fixed;
+  background-color: var(--star-color);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+  animation: twinkle 3s infinite;
+}
+
+.shooting-star {
+  position: fixed;
+  width: 100px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent-color));
+  pointer-events: none;
+  z-index: 1;
+  animation: shootingStar linear forwards;
+}
+
+.planet {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.1;
+  filter: blur(20px);
+}
+
+/* ===== PROXY PAGE STYLES ===== */
+#proxyPageContent {
+  width: 100%;
+  height: 100%;
+  background-color: transparent;
+  color: var(--text-color);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.proxy-header {
+  background: linear-gradient(135deg, rgba(10, 14, 41, 0.9), rgba(26, 35, 126, 0.9));
+  padding: 30px;
+  border-radius: 20px;
+  text-align: center;
+  margin-bottom: 30px;
+  width: 90%;
+  max-width: 800px;
+  border: 2px solid var(--border-color);
+  box-shadow: 0 0 30px var(--shadow-color);
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+.proxy-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+  animation: pulse 2s infinite;
+}
+
+.proxy-header h1 {
+  font-size: 2.8rem;
+  color: var(--accent-color);
+  margin-bottom: 15px;
+  text-shadow: 0 0 15px currentColor;
+  letter-spacing: 2px;
+}
+
+.proxy-header p {
+  font-size: 1.2rem;
+  opacity: 0.9;
+  font-family: 'Courier New', monospace;
+}
+
+/* ===== SPACESHIP LOADING SCREEN ===== */
+.spaceship-loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #000010, #0a0e29, #1a237e);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  transition: opacity 0.8s ease;
+  backdrop-filter: blur(10px);
+}
+
+.spaceship-loading-screen.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.spaceship-container {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  margin-bottom: 40px;
+}
+
+.spaceship {
+  position: absolute;
+  left: -200px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 80px;
+  color: var(--accent-color);
+  filter: drop-shadow(0 0 20px var(--accent-color));
+  animation: spaceshipFly 3s ease-in-out infinite;
+  z-index: 2;
+}
+
+.spaceship-trail {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 0;
+  height: 4px;
+  background: linear-gradient(90deg, 
+    transparent,
+    var(--accent-color),
+    rgba(0, 229, 255, 0.7),
+    rgba(0, 229, 255, 0.4),
+    rgba(0, 229, 255, 0.2),
+    transparent
+  );
+  transform: translateY(-50%);
+  filter: blur(1px);
+  animation: trailExtend 3s ease-in-out infinite;
+}
+
+@keyframes spaceshipFly {
+  0% {
+    left: -200px;
+    transform: translateY(-50%) rotate(0deg);
+  }
+  30% {
+    transform: translateY(-60%) rotate(5deg);
+  }
+  50% {
+    transform: translateY(-50%) rotate(0deg);
+  }
+  70% {
+    transform: translateY(-40%) rotate(-5deg);
+  }
+  100% {
+    left: calc(100% + 200px);
+    transform: translateY(-50%) rotate(0deg);
+  }
+}
+
+@keyframes trailExtend {
+  0% {
+    width: 0;
+    opacity: 0;
+    left: -200px;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    width: 10%;
+    opacity: 0;
+    left: 0;
+  }
+}
+
+.loading-planet {
+  position: absolute;
+  right: 100px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #4a148c, #7b1fa2);
+  border-radius: 50%;
+  filter: blur(2px);
+  box-shadow: 
+    0 0 30px #9c27b0,
+    0 0 60px rgba(156, 39, 176, 0.5),
+    inset 0 10px 20px rgba(255, 255, 255, 0.2);
+  z-index: 1;
+}
+
+.loading-message {
+  text-align: center;
+  margin-top: 30px;
+}
+
+.loading-title {
+  font-size: 3rem;
+  color: var(--accent-color);
+  text-shadow: 0 0 20px var(--accent-color);
+  margin-bottom: 20px;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 3px;
+  animation: pulse 2s infinite;
+}
+
+.loading-subtitle {
+  font-size: 1.5rem;
+  color: var(--text-color);
+  opacity: 0.9;
+  font-family: 'Courier New', monospace;
+  margin-bottom: 10px;
+}
+
+.wait-time {
+  font-size: 1.2rem;
+  color: #ff9800;
+  background: rgba(255, 152, 0, 0.1);
+  padding: 10px 20px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 152, 0, 0.3);
+  display: inline-block;
+  margin-top: 10px;
+  animation: pulse 1.5s infinite;
+}
+
+.beta-badge {
+  position: absolute;
+  top: 30px;
+  right: 30px;
+  background: linear-gradient(135deg, #ff4081, #f50057);
+  color: white;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 1rem;
+  letter-spacing: 2px;
+  transform: rotate(15deg);
+  box-shadow: 0 5px 20px rgba(245, 0, 87, 0.5);
+  animation: float 3s ease-in-out infinite;
+}
+
+.progress-container {
+  width: 400px;
+  margin-top: 40px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 5px;
+  border: 1px solid var(--border-color);
+}
+
+.progress-bar {
+  height: 10px;
+  background: linear-gradient(90deg, var(--accent-color), #00b8d4);
+  border-radius: 8px;
+  width: 0%;
+  transition: width 0.3s ease;
+  box-shadow: 0 0 15px var(--accent-color);
+}
+
+.progress-text {
+  text-align: center;
+  margin-top: 15px;
+  font-family: 'Courier New', monospace;
+  color: var(--accent-color);
+  font-size: 1.2rem;
+}
+
+/* Timer Section - Space Theme */
+.timer-container {
+  background: linear-gradient(135deg, rgba(10, 14, 41, 0.9), rgba(26, 35, 126, 0.7));
+  border-radius: 20px;
+  padding: 40px;
+  margin-bottom: 40px;
+  width: 90%;
+  max-width: 800px;
+  text-align: center;
+  border: 2px solid var(--border-color);
+  box-shadow: 0 0 40px var(--shadow-color);
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+.timer-container::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, transparent 30%, rgba(0, 229, 255, 0.1) 70%);
+  animation: float 10s infinite linear;
+  z-index: -1;
+}
+
+.timer-container h2 {
+  font-size: 2.2rem;
+  color: var(--accent-color);
+  margin-bottom: 25px;
+  text-shadow: 0 0 10px currentColor;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+}
+
+.countdown-box {
+  display: flex;
+  justify-content: center;
+  gap: 25px;
+  flex-wrap: wrap;
+  margin: 40px 0;
+}
+
+.countdown-item {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 15px;
+  padding: 25px;
+  min-width: 120px;
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.countdown-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent-color);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.countdown-item:hover {
+  transform: translateY(-10px);
+  border-color: var(--accent-color);
+  box-shadow: 0 10px 25px var(--shadow-color);
+}
+
+.countdown-item:hover::before {
+  transform: scaleX(1);
+}
+
+.countdown-value {
+  font-size: 3.5rem;
+  font-weight: bold;
+  color: var(--accent-color);
+  text-shadow: 0 0 15px currentColor;
+  line-height: 1;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 2px;
+}
+
+.countdown-label {
+  font-size: 1.1rem;
+  margin-top: 15px;
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 300;
+}
+
+.timer-description {
+  margin-top: 40px;
+  padding: 25px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 15px;
+  border-left: 4px solid var(--accent-color);
+  text-align: left;
+  position: relative;
+}
+
+.timer-description::before {
+  content: '🚀';
+  position: absolute;
+  top: -15px;
+  left: -15px;
+  font-size: 24px;
+  background: var(--card-bg);
+  padding: 5px;
+  border-radius: 50%;
+  border: 2px solid var(--accent-color);
+}
+
+.timer-description p {
+  font-size: 1.1rem;
+  line-height: 1.7;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* Coming Soon Section */
+.coming-soon-container {
+  background: linear-gradient(135deg, rgba(10, 14, 41, 0.9), rgba(26, 35, 126, 0.7));
+  border-radius: 20px;
+  padding: 40px;
+  width: 90%;
+  max-width: 800px;
+  text-align: center;
+  border: 2px solid var(--border-color);
+  box-shadow: 0 0 40px var(--shadow-color);
+  backdrop-filter: blur(10px);
+  margin-bottom: 40px;
+}
+
+.coming-soon-container h2 {
+  font-size: 2.2rem;
+  color: var(--accent-color);
+  margin-bottom: 25px;
+  text-shadow: 0 0 10px currentColor;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+}
+
+.coming-soon-text {
+  font-size: 1.3rem;
+  line-height: 1.8;
+  margin-bottom: 30px;
+  opacity: 0.9;
+  font-family: 'Courier New', monospace;
+}
+
+.space-message {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 15px;
+  padding: 25px;
+  margin-top: 30px;
+  border: 1px solid var(--border-color);
+  position: relative;
+}
+
+.space-message::before {
+  content: '👨‍🚀';
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 32px;
+  background: var(--card-bg);
+  padding: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--accent-color);
+}
+
+.space-message p {
+  font-size: 1.1rem;
+  line-height: 1.7;
+  font-style: italic;
+}
+
+/* ===== ANTI-SCRAPING PROTECTION ===== */
+body {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  cursor: default;
+}
+
+/* ===== ANTI-IFRAME PROTECTION ===== */
+.anti-iframe-message {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #000020;
+  color: #ff5252;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 999999;
+  font-size: 24px;
+  text-align: center;
+  padding: 30px;
+  font-family: 'Courier New', monospace;
+  text-shadow: 0 0 10px #ff5252;
+  animation: pulse 2s infinite;
+}
+
+/* ===== PARTICLES ENHANCED ===== */
+#particles{
+  position:fixed;
+  inset:0;
+  z-index:0;
+}
+
+/* ===== NOTIFICATIONS ===== */
+#notifications {
+  position: fixed;
+  top: 70px;
+  right: 20px;
+  z-index: 1000;
+  max-width: 350px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.notification {
+  background: var(--card-bg);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 5px 20px var(--shadow-color);
+  border: 1px solid var(--border-color);
+  animation: slideIn 0.3s ease;
+  transform-origin: top right;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.notification:hover {
+  transform: translateX(-5px) scale(1.02);
+}
+
+.notification-icon {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+  background: rgba(0, 229, 255, 0.2);
+  color: var(--accent-color);
+  border: 1px solid var(--border-color);
+}
+
+.notification-content {
+  flex: 1;
+}
+
+.notification-title {
+  font-weight: bold;
+  margin-bottom: 5px;
+  font-size: 16px;
+  color: var(--accent-color);
+}
+
+.notification-message {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.notification-time {
+  font-size: 12px;
+  opacity: 0.6;
+  margin-top: 5px;
+  font-family: 'Courier New', monospace;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes slideOut {
+  to {
+    opacity: 0;
+    transform: translateX(100px) scale(0.9);
+  }
+}
+
+.notification.slide-out {
+  animation: slideOut 0.3s ease forwards;
+}
+
+/* ===== STATUS INDICATORS ===== */
+.status-indicator {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 8px;
+  box-shadow: 0 0 10px currentColor;
+}
+
+.status-online {
+  background-color: #00ff9d;
+  animation: pulse 2s infinite;
+}
+
+.status-away {
+  background-color: #ffb300;
+  animation: pulse 2s infinite;
+}
+
+.status-offline {
+  background-color: #ff5252;
+}
+
+.status-busy {
+  background-color: #d50000;
+  animation: pulse 1s infinite;
+}
+
+/* ===== NAVBAR ===== */
+#nav{
+  position:fixed;
+  top:15px;
+  left:50%;
+  transform:translateX(-50%);
+  display:flex;
+  gap:12px;
+  z-index:10;
+  background: var(--nav-bg);
+  backdrop-filter: blur(15px);
+  padding: 10px 15px;
+  border-radius: 20px;
+  border: 2px solid var(--border-color);
+  box-shadow: 0 5px 25px var(--shadow-color);
+}
+.navBtn{
+  padding:12px 24px;
+  border-radius:12px;
+  background:rgba(0, 229, 255, 0.1);
+  border:2px solid transparent;
+  cursor:pointer;
+  font-weight:600;
+  transition: all 0.3s ease;
+  color: var(--text-color);
+  font-size: 15px;
+  letter-spacing: 0.5px;
+  position: relative;
+  overflow: hidden;
+}
+.navBtn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 229, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+.navBtn:hover{
+  background:rgba(0, 229, 255, 0.2);
+  transform: translateY(-3px);
+  border-color: var(--accent-color);
+}
+.navBtn:hover::before {
+  left: 100%;
+}
+.navBtn.active{
+  background:var(--accent-color);
+  color: #000020;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 20px var(--accent-color);
+}
+
+/* ===== SETTINGS BUTTON ===== */
+#settingsBtn {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--nav-bg);
+  backdrop-filter: blur(15px);
+  border: 2px solid var(--border-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  color: var(--accent-color);
+  font-size: 22px;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 20px var(--shadow-color);
+}
+
+#settingsBtn:hover {
+  transform: rotate(180deg) scale(1.1);
+  background: var(--accent-color);
+  color: #000020;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 25px var(--accent-color);
+}
+
+/* ===== SETTINGS MODAL ===== */
+#settingsModal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 20, 0.8);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+}
+
+.settings-content {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  border-radius: 20px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+  border: 2px solid var(--border-color);
+  box-shadow: 0 0 40px var(--shadow-color);
+}
+
+.settings-header {
+  padding: 25px;
+  border-bottom: 2px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.settings-header h2 {
+  color: var(--accent-color);
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.close-settings {
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: var(--accent-color);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-settings:hover {
+  background: var(--accent-color);
+  color: #000020;
+  transform: rotate(90deg);
+}
+
+.settings-body {
+  padding: 25px;
+}
+
+.setting-item {
+  margin-bottom: 25px;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 15px;
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.setting-item:hover {
+  border-color: var(--accent-color);
+  transform: translateY(-2px);
+}
+
+.setting-item label {
+  display: block;
+  margin-bottom: 12px;
+  font-weight: bold;
+  color: var(--accent-color);
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.setting-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.theme-toggle {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.theme-option-btn {
+  padding: 12px 20px;
+  border-radius: 10px;
+  border: 2px solid var(--border-color);
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--text-color);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex: 1;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.theme-option-btn:hover {
+  border-color: var(--accent-color);
+  transform: translateY(-2px);
+}
+
+.theme-option-btn.active {
+  background: var(--accent-color);
+  color: #000020;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 15px var(--accent-color);
+}
+
+.status-select {
+  padding: 12px 15px;
+  border-radius: 10px;
+  border: 2px solid var(--border-color);
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--text-color);
+  width: 100%;
+  cursor: pointer;
+  font-size: 15px;
+  transition: all 0.3s ease;
+}
+
+.status-select:hover {
+  border-color: var(--accent-color);
+}
+
+.status-select:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 10px var(--accent-color);
+}
+
+/* ===== GO BACK BUTTON ===== */
+#goBackBtn{
+  position:fixed;
+  top:15px;
+  left:15px;
+  padding:12px 24px;
+  border-radius:12px;
+  background:var(--nav-bg);
+  backdrop-filter: blur(10px);
+  border:2px solid var(--border-color);
+  cursor:pointer;
+  font-weight:600;
+  color: var(--accent-color);
+  z-index:20;
+  display:none;
+  transition:all 0.3s ease;
+  box-shadow: 0 5px 20px var(--shadow-color);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+#goBackBtn:hover{
+  background:var(--accent-color);
+  color: #000020;
+  transform: translateX(-3px);
+  border-color: var(--accent-color);
+  box-shadow: 0 0 20px var(--accent-color);
+}
+
+/* ===== CENTER TEXT ===== */
+#powered{
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction: column;
+  justify-content:center;
+  align-items:center;
+  font-size:48px;
+  font-weight:700;
+  text-shadow:0 0 20px currentColor;
+  animation:float 6s ease-in-out infinite;
+  z-index:1;
+  pointer-events:none;
+  color: var(--accent-color);
+  font-family: 'Courier New', monospace;
+  letter-spacing: 3px;
+}
+
+#powered::after {
+  content: 'SPACE EDITION';
+  font-size: 18px;
+  margin-top: 20px;
+  opacity: 0.8;
+  letter-spacing: 5px;
+  animation: pulse 3s infinite;
+}
+
+/* ===== UPDATE MODAL ===== */
+#update{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,30,0.9);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  z-index:50;
+  backdrop-filter: blur(10px);
+}
+#updateBox{
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  padding: 40px;
+  border-radius:20px;
+  text-align:center;
+  max-width:500px;
+  border: 3px solid var(--border-color);
+  box-shadow: 0 0 50px var(--shadow-color);
+  position: relative;
+  overflow: hidden;
+}
+#updateBox::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+  animation: pulse 2s infinite;
+}
+#updateBox h2{
+  margin-bottom:20px;
+  font-size:28px;
+  color: var(--accent-color);
+  text-shadow: 0 0 10px currentColor;
+}
+#updateBox p {
+  color: var(--text-color);
+  font-size: 18px;
+  line-height: 1.6;
+  margin-bottom: 25px;
+}
+#updateBox button{
+  margin-top:20px;
+  padding:15px 30px;
+  border:none;
+  background:var(--accent-color);
+  color:#000020;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:bold;
+  font-size:16px;
+  transition: all 0.3s ease;
+  letter-spacing: 1px;
+  border: 2px solid transparent;
+}
+#updateBox button:hover{
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px var(--shadow-color);
+  border-color: var(--accent-color);
+}
+
+/* ===== PAGES ===== */
+.page{
+  position:fixed;
+  inset:0;
+  display:none;
+  z-index:2;
+}
+.page.active{display:block}
+
+/* ===== CUSTOMIZE PAGE ===== */
+#customizeContent {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,20,0.8);
+  backdrop-filter: blur(10px);
+}
+
+.customize-title {
+  font-size: 42px;
+  margin-bottom: 40px;
+  color: var(--accent-color);
+  text-shadow: 0 0 20px currentColor;
+  letter-spacing: 2px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 25px;
+  max-width: 900px;
+  width: 90%;
+  margin: 20px;
+}
+
+.theme-option {
+  padding: 25px;
+  border-radius: 15px;
+  cursor: pointer;
+  text-align: center;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  color: white;
+  font-size: 18px;
+  letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-option::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, white, transparent);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.theme-option:hover {
+  transform: translateY(-8px) scale(1.05);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+}
+
+.theme-option:hover::before {
+  transform: scaleX(1);
+}
+
+.theme-option.active {
+  border-color: var(--accent-color);
+  transform: scale(1.05);
+  box-shadow: 0 0 30px var(--accent-color);
+}
+
+/* Theme colors - Space Edition */
+.theme-1 { 
+  background: linear-gradient(135deg, #0a0e29, #1a237e, #311b92);
+  border: 2px solid #00e5ff;
+}
+.theme-2 { 
+  background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+  border: 2px solid #00ff9d;
+}
+.theme-3 { 
+  background: linear-gradient(135deg, #1a0b2e, #4a1e6e, #6a2c9e);
+  border: 2px solid #9d4edd;
+}
+.theme-4 { 
+  background: linear-gradient(135deg, #00224d, #00509d, #1e96fc);
+  border: 2px solid #a2d2ff;
+}
+.theme-5 { 
+  background: linear-gradient(135deg, #2d0b2e, #5e1d6e, #8f2e9e);
+  border: 2px solid #ff6bcb;
+}
+.theme-6 { 
+  background: linear-gradient(135deg, #0f0f23, #1a1a2e, #2d2d44);
+  border: 2px solid #00ff9d;
+}
+
+/* ===== GAMES PAGE STYLES ===== */
+#gamesPageContent {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #000010, #0a0e29);
+  color: var(--text-color);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+#gamesPageContent * {
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* Loading Screen */
+.loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #000010, #0a0e29);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  transition: opacity 0.5s ease;
+}
+
+.loading-screen.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.gaming-mode-text {
+  font-size: 3.5rem;
+  color: var(--accent-color);
+  text-align: center;
+  text-shadow: 0 0 15px var(--accent-color), 0 0 30px var(--accent-color), 0 0 45px var(--accent-color);
+  margin-bottom: 40px;
+  animation: pulse 2s infinite, float 4s ease-in-out infinite;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 3px;
+}
+
+.loading-bar {
+  width: 400px;
+  height: 12px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 30px;
+  border: 2px solid var(--border-color);
+}
+
+.loading-progress {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-color), #00b8d4);
+  width: 0%;
+  transition: width 0.3s ease;
+  box-shadow: 0 0 15px var(--accent-color);
+}
+
+.loading-percent {
+  color: var(--accent-color);
+  font-size: 1.8rem;
+  margin-top: 20px;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+  animation: pulse 1.5s infinite;
+}
+
+/* Header */
+.game-header-section {
+  background: linear-gradient(135deg, rgba(10, 14, 41, 0.9), rgba(26, 35, 126, 0.7));
+  padding: 20px 40px;
+  border-bottom: 4px solid var(--accent-color);
+  box-shadow: 0 10px 30px var(--shadow-color);
+  position: relative;
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  backdrop-filter: blur(10px);
+}
+
+.game-header-section::before {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+  animation: pulse 2s infinite;
+}
+
+.game-logo {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.game-logo h1 {
+  font-size: 2.5rem;
+  color: var(--accent-color);
+  text-shadow: 0 0 15px var(--accent-color);
+  letter-spacing: 3px;
+  font-family: 'Courier New', monospace;
+}
+
+.game-logo i {
+  color: var(--accent-color);
+  font-size: 2.5rem;
+  animation: glow 2s infinite alternate, float 3s ease-in-out infinite;
+}
+
+.status-indicator-game {
+  background: linear-gradient(135deg, var(--accent-color), #00b8d4);
+  color: #000020;
+  padding: 12px 30px;
+  border-radius: 25px;
+  font-weight: bold;
+  font-size: 1rem;
+  box-shadow: 0 0 20px var(--accent-color);
+  animation: statusPulse 3s infinite;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 2px;
+}
+
+@keyframes statusPulse {
+  0%, 100% { box-shadow: 0 0 15px var(--accent-color); }
+  50% { box-shadow: 0 0 30px var(--accent-color); }
+}
+
+/* Games Container */
+.games-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 30px;
+  padding: 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.game-card {
+  width: 320px;
+  background: linear-gradient(135deg, rgba(10, 14, 41, 0.8), rgba(26, 35, 126, 0.6));
+  border-radius: 20px;
+  padding: 30px;
+  border: 2px solid var(--border-color);
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+.game-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+  transform: scaleX(0);
+  transition: transform 0.4s ease;
+}
+
+.game-card:hover {
+  border-color: var(--accent-color);
+  transform: translateY(-10px) scale(1.05);
+  box-shadow: 0 20px 40px var(--shadow-color);
+}
+
+.game-card:hover::before {
+  transform: scaleX(1);
+}
+
+.game-card::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(0, 229, 255, 0.1) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.game-card:hover::after {
+  opacity: 1;
+}
+
+.game-title {
+  color: var(--accent-color);
+  font-size: 2rem;
+  margin-bottom: 15px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px currentColor;
+  font-family: 'Courier New', monospace;
+}
+
+.game-desc {
+  color: var(--text-color);
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin-bottom: 20px;
+  min-height: 60px;
+  opacity: 0.9;
+}
+
+.game-type {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--accent-color), #00b8d4);
+  color: #000020;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1px;
+}
+
+.play-button {
+  display: block;
+  width: 100%;
+  background: transparent;
+  color: var(--accent-color);
+  border: 2px solid var(--accent-color);
+  padding: 15px;
+  text-align: center;
+  text-decoration: none;
+  font-weight: bold;
+  border-radius: 10px;
+  transition: all 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.play-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 229, 255, 0.3), transparent);
+  transition: left 0.5s;
+  z-index: -1;
+}
+
+.play-button:hover {
+  background: var(--accent-color);
+  color: #000020;
+  box-shadow: 0 0 25px var(--accent-color);
+  transform: translateY(-3px);
+}
+
+.play-button:hover::before {
+  left: 100%;
+}
+
+.favorite-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 24px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 1;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.favorite-btn:hover {
+  color: var(--accent-color);
+  transform: scale(1.2) rotate(180deg);
+  background: rgba(0, 229, 255, 0.2);
+}
+
+.favorite-btn.favorited {
+  color: var(--accent-color);
+  animation: pulse 1s infinite;
+}
+
+/* Games Filter */
+.games-filter {
+  padding: 25px 40px;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 2px solid var(--border-color);
+  backdrop-filter: blur(10px);
+}
+
+.filter-btn {
+  padding: 12px 24px;
+  border-radius: 20px;
+  border: 2px solid var(--border-color);
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--text-color);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+.filter-btn.active {
+  background: linear-gradient(135deg, var(--accent-color), #00b8d4);
+  color: #000020;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 20px var(--accent-color);
+}
+
+.filter-btn:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent-color);
+}
+
+.search-input {
+  flex: 1;
+  padding: 12px 20px;
+  border-radius: 20px;
+  border: 2px solid var(--border-color);
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--text-color);
+  min-width: 250px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 15px var(--shadow-color);
+}
+
+/* Game Frame */
+.game-frame-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #000020;
+  z-index: 100;
+  display: none;
+  flex-direction: column;
+}
+
+.game-frame-container.active {
+  display: flex;
+}
+
+.game-header-frame {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(10, 14, 41, 0.9));
+  padding: 20px 40px;
+  border-bottom: 4px solid var(--accent-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+}
+
+.game-title-frame {
+  color: var(--accent-color);
+  font-size: 2rem;
+  text-shadow: 0 0 15px var(--accent-color);
+  font-family: 'Courier New', monospace;
+  letter-spacing: 2px;
+}
+
+.close-game {
+  background: linear-gradient(135deg, var(--accent-color), #00b8d4);
+  color: #000020;
+  border: none;
+  padding: 12px 30px;
+  font-weight: bold;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 1rem;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.close-game:hover {
+  background: #000020;
+  color: var(--accent-color);
+  box-shadow: 0 0 25px var(--accent-color);
+  transform: translateY(-3px);
+}
+
+.game-frame {
+  flex-grow: 1;
+  width: 100%;
+  border: none;
+}
+
+/* Footer */
+.game-footer {
+  text-align: center;
+  padding: 30px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1rem;
+  border-top: 2px solid var(--border-color);
+  margin-top: 40px;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 2px;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.game-footer span {
+  color: var(--accent-color);
+  font-weight: bold;
+  text-shadow: 0 0 10px currentColor;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .games-container {
+    padding: 20px;
+    gap: 20px;
+  }
+  
+  .game-card {
+    width: 100%;
+    max-width: 400px;
+    padding: 25px;
+  }
+  
+  .gaming-mode-text {
+    font-size: 2rem;
+  }
+  
+  .game-header-section {
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+  }
+  
+  #goBackBtn {
+    top: 10px;
+    left: 10px;
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+  
+  .theme-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+  }
+  
+  .theme-option {
+    padding: 20px;
+    font-size: 16px;
+  }
+  
+  #nav {
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 95%;
+    top: 10px;
+  }
+  
+  .navBtn {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+  
+  /* Spaceship loading responsive */
+  .spaceship-loading-screen {
+    padding: 20px;
+  }
+  
+  .spaceship-container {
+    height: 200px;
+  }
+  
+  .loading-title {
+    font-size: 2rem;
+  }
+  
+  .loading-subtitle {
+    font-size: 1.2rem;
+  }
+  
+  .progress-container {
+    width: 300px;
+  }
+  
+  .beta-badge {
+    top: 20px;
+    right: 20px;
+    padding: 6px 15px;
+    font-size: 0.9rem;
+  }
+  
+  /* Proxy page responsive */
+  .countdown-box {
+    gap: 15px;
+  }
+  
+  .countdown-item {
+    min-width: 100px;
+    padding: 20px 15px;
+  }
+  
+  .countdown-value {
+    font-size: 2.5rem;
+  }
+  
+  .proxy-header h1 {
+    font-size: 2rem;
+  }
+  
+  .timer-container h2,
+  .coming-soon-container h2 {
+    font-size: 1.8rem;
+  }
+  
+  #powered {
+    font-size: 2.5rem;
+  }
+  
+  #powered::after {
+    font-size: 14px;
+    margin-top: 10px;
+  }
+}
+
+/* ===== ANTI SCRAPER OVERLAY ===== */
+#antiScraper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #000020;
+  color: #ff5252;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 999999;
+  font-size: 28px;
+  text-align: center;
+  padding: 30px;
+  font-family: 'Courier New', monospace;
+  text-shadow: 0 0 10px #ff5252;
+}
+
+#antiScraper h1 {
+  animation: blink 1s infinite;
+  font-size: 3rem;
+  margin-bottom: 20px;
+}
+
+/* ===== ANTI DEVTOOLS ===== */
+#devtoolsWarning {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #000020;
+  color: #ff5252;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+  font-size: 28px;
+  text-align: center;
+  padding: 30px;
+  font-family: 'Courier New', monospace;
+  text-shadow: 0 0 10px #ff5252;
+}
+
+.blink {
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+<!-- ANTI-SCRAPER MESSAGE -->
+<div id="antiScraper" style="display: none;">
+  <div>
+    <h1>🚫 ACCESS DENIED</h1>
+    <p>This application is protected against scraping and unauthorized copying.</p>
+    <p>Please visit the original site: <span style="color: #00e5ff;">https://new-wgs-17979702.codehs.me/</span></p>
+    <p>This violation has been logged.</p>
+  </div>
+</div>
+
+<!-- ANTI IFRAME MESSAGE -->
+<div id="antiIframe" class="anti-iframe-message" style="display: none;">
+  <div>
+    <h1>🚫 IFRAME DETECTED</h1>
+    <p>This application cannot be embedded in iframes.</p>
+    <p>Please visit the original site directly.</p>
+  </div>
+</div>
+
+<!-- ANTI DEVTOOLS WARNING -->
+<div id="devtoolsWarning" style="display: none;">
+  <div>
+    <h1 class="blink">⚠ WARNING ⚠</h1>
+    <p>Developer tools detected!</p>
+    <p>This action has been logged.</p>
+  </div>
+</div>
+
+<!-- UPDATE NOTICE -->
+<div id="update">
+  <div id="updateBox">
+    <h2> News </h2>
+    <p>We need spys guys contact 1041224@lcps.org<br>This version is official.</p>
+    <button onclick="document.getElementById('update').style.display='none'">
+      LAUNCH
+    </button>
+  </div>
+</div>
+
+<!-- NOTIFICATIONS -->
+<div id="notifications"></div>
+
+<!-- SETTINGS MODAL -->
+<div id="settingsModal">
+  <div class="settings-content">
+    <div class="settings-header">
+      <h2><i class="fas fa-rocket"></i> Space Settings</h2>
+      <button class="close-settings" onclick="closeSettings()">×</button>
+    </div>
+    <div class="settings-body">
+      <div class="setting-item">
+        <label><i class="fas fa-palette"></i> Space Theme</label>
+        <div class="setting-controls">
+          <div class="theme-toggle">
+            <button class="theme-option-btn" onclick="setDarkSpaceTheme()" id="darkSpaceThemeBtn">Dark Space</button>
+            <button class="theme-option-btn active" onclick="setSpaceTheme()" id="spaceThemeBtn">Nebula</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="setting-item">
+        <label><i class="fas fa-user-astronaut"></i> Status</label>
+        <div class="setting-controls">
+          <select class="status-select" id="statusSelect" onchange="updateStatus()">
+            <option value="online">🟢 Online</option>
+            <option value="away">🟡 Away</option>
+            <option value="busy">🔴 Busy</option>
+            <option value="offline">⚫ Offline</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="setting-item">
+        <label><i class="fas fa-satellite"></i> Notifications</label>
+        <div class="setting-controls">
+          <button class="theme-option-btn active" onclick="toggleNotifications(true)">On</button>
+          <button class="theme-option-btn" onclick="toggleNotifications(false)">Off</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<canvas id="particles"></canvas>
+
+<!-- SETTINGS BUTTON -->
+<button id="settingsBtn" onclick="openSettings()">
+  <i class="fas fa-rocket"></i>
+</button>
+
+<div id="powered">WGS+</div>
+
+<!-- GO BACK BUTTON -->
+<button id="goBackBtn" onclick="goBackToHome()">
+  <i class="fas fa-arrow-left"></i> Return
+</button>
+
+<!-- NAV -->
+<div id="nav">
+  <div class="navBtn active" onclick="showPage('home',this)">🚀 Home</div>
+  <div class="navBtn" onclick="showPage('games',this)">🎮 Games</div>
+  <div class="navBtn" onclick="showPage('customize',this)">✨ Customize</div>
+  <div class="navBtn" onclick="showPage('proxy',this)">🛡️ Proxy</div>
+</div>
+
+<!-- PAGES -->
+<div id="home" class="page active"></div>
+
+<div id="games" class="page">
+  <div id="gamesPageContent">
+    <!-- Games content will be loaded here -->
+  </div>
+</div>
+
+<div id="customize" class="page">
+  <div id="customizeContent">
+    <h1 class="customize-title"><i class="fas fa-galaxy"></i> Customize Space Theme</h1>
+    <div class="theme-grid">
+      <div class="theme-option theme-1 active" onclick="changeTheme('theme-1')">🌌 Nebula</div>
+      <div class="theme-option theme-2" onclick="changeTheme('theme-2')">🛸 Dark Space</div>
+      <div class="theme-option theme-3" onclick="changeTheme('theme-3')">🪐 Purple Nebula</div>
+      <div class="theme-option theme-4" onclick="changeTheme('theme-4')">🌊 Ocean Space</div>
+      <div class="theme-option theme-5" onclick="changeTheme('theme-5')">💖 Pink Nebula</div>
+      <div class="theme-option theme-6" onclick="changeTheme('theme-6')">⚫ Void Space</div>
+    </div>
+  </div>
+</div>
+
+<!-- PROXY PAGE -->
+<div id="proxy" class="page">
+  <div id="proxyPageContent">
+    <!-- Spaceship Loading Screen -->
+    <div class="spaceship-loading-screen" id="spaceshipLoading">
+      <div class="beta-badge">BETA</div>
+      <div class="spaceship-container">
+        <div class="spaceship">🚀</div>
+        <div class="spaceship-trail"></div>
+        <div class="loading-planet"></div>
+      </div>
+      <div class="loading-message">
+        <h1 class="loading-title">WGS+ SPACE PORTAL</h1>
+        <p class="loading-subtitle">This is runned on codehs kinda slow!</p>
+        <div class="wait-time">Wait time is about 2 minutes</div>
+      </div>
+      <div class="progress-container">
+        <div class="progress-bar" id="proxyProgressBar"></div>
+      </div>
+      <div class="progress-text" id="proxyProgressText">Initializing space portal...</div>
+    </div>
+    
+    <div class="proxy-header">
+      <h1><i class="fas fa-shield-alt"></i> WGs+ Space Portal</h1>
+      <p>Coming Soon: Interstellar Proxy Network</p>
+    </div>
+    
+    <div class="timer-container">
+      <h2><i class="fas fa-clock"></i> Cosmic Countdown</h2>
+      <p>Time until Space Portal activation: March 27, 2026</p>
+      
+      <div class="countdown-box" id="countdownBox">
+        <div class="countdown-item">
+          <div class="countdown-value" id="days">00</div>
+          <div class="countdown-label">Light Years</div>
+        </div>
+        <div class="countdown-item">
+          <div class="countdown-value" id="hours">00</div>
+          <div class="countdown-label">Space Hours</div>
+        </div>
+        <div class="countdown-item">
+          <div class="countdown-value" id="minutes">00</div>
+          <div class="countdown-label">Orbits</div>
+        </div>
+        <div class="countdown-item">
+          <div class="countdown-value" id="seconds">00</div>
+          <div class="countdown-label">Pulses</div>
+        </div>
+      </div>
+      
+      <div class="timer-description">
+        <p><i class="fas fa-info-circle"></i> The portal activation countdown continues. When the timer reaches zero, the interstellar proxy network will be fully operational across all sectors.</p>
+      </div>
+    </div>
+    
+    <div class="coming-soon-container">
+      <h2><i class="fas fa-wrench"></i> Portal Under Construction</h2>
+      <div class="coming-soon-text">
+        🚧 The Space Portal is currently being prepared for launch.<br>
+        Our engineers are working around the clock to deploy the proxy network.<br>
+        Check back on March 27, 2026 for the grand opening!
+      </div>
+      
+      <div class="space-message">
+        <p>"The cosmos is waiting. Prepare for the journey ahead."</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== STRICT URL LOCK SYSTEM =====
+(function() {
+    const allowedURL = "https://wgs-reborn-1-18040008.codehs.me/index.html";
+    const currentURL = window.location.href;
+
+    // Remove trailing slash if present and normalize
+    const normalizeURL = (url) => url.replace(/\/$/, ''); // Remove trailing slash
+    const normalizedAllowed = normalizeURL(allowedURL);
+    const normalizedCurrent = normalizeURL(currentURL);
+
+    // Strict comparison
+    if (normalizedCurrent !== normalizedAllowed) {
+        // If not the exact URL, block everything
+        document.documentElement.innerHTML = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>🚫 ACCESS DENIED - WGS+ Space Edition</title>
+                <style>
+                    body {
+                        background: #000010;
+                        color: #ff5252;
+                        font-family: 'Courier New', monospace;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        height: 100vh;
+                        margin: 0;
+                        text-align: center;
+                        padding: 20px;
+                    }
+                    .denied-box {
+                        background: rgba(10, 14, 41, 0.9);
+                        border: 3px solid #ff5252;
+                        border-radius: 20px;
+                        padding: 40px;
+                        max-width: 600px;
+                        box-shadow: 0 0 50px rgba(255, 82, 82, 0.5);
+                    }
+                    h1 {
+                        font-size: 3rem;
+                        margin-bottom: 20px;
+                        text-shadow: 0 0 15px #ff5252;
+                        animation: blink 1s infinite;
+                    }
+                    p {
+                        font-size: 1.2rem;
+                        margin: 15px 0;
+                        line-height: 1.6;
+                    }
+                    .correct-url {
+                        color: #00e5ff;
+                        font-weight: bold;
+                        font-size: 1.3rem;
+                        margin: 25px 0;
+                        background: rgba(0, 229, 255, 0.1);
+                        padding: 15px;
+                        border-radius: 10px;
+                        border: 1px solid #00e5ff;
+                    }
+                    @keyframes blink {
+                        0%, 100% { opacity: 1; }
+                        50% { opacity: 0.3; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="denied-box">
+                    <h1>🚫 UNAUTHORIZED ACCESS</h1>
+                    <p>This WGS+ Space Edition instance is locked to a specific URL for security.</p>
+                    <p>You are accessing from:</p>
+                    <p><strong style="color: #ff9800;">${currentURL}</strong></p>
+                    <p>The only allowed access point is:</p>
+                    <div class="correct-url">${allowedURL}</div>
+                    <p>Please navigate to the correct URL to use WGS+ Space Edition.</p>
+                    <p><em>This violation has been logged.</em></p>
+                </div>
+            </body>
+            </html>
+        `;
+        
+        // Prevent any further JavaScript execution
+        throw new Error("URL access violation");
+    }
+    
+    console.log("✅ URL verification passed: Access granted to WGS+ Space Edition");
+})();
+
+// ===== FIXED PROTECTION SYSTEM =====
+(function() {
+  'use strict';
+  
+  const antiScraper = document.getElementById('antiScraper');
+  const antiIframe = document.getElementById('antiIframe');
+  const devtoolsWarning = document.getElementById('devtoolsWarning');
+  
+  // Track if we're in a known scraper
+  let isScraper = false;
+  
+  // Anti-iframe protection - SIMPLE AND RELIABLE
+  function detectIframe() {
+    try {
+      // Check if we're in an iframe
+      if (window.self !== window.top) {
+        // Check if the parent is from the same origin
+        try {
+          // Try to access parent location - will throw error if cross-origin
+          const parentHost = window.parent.location.hostname;
+          const currentHost = window.location.hostname;
+          
+          // Allow if same origin
+          if (parentHost === currentHost) {
+            return false;
+          }
+        } catch (e) {
+          // Cross-origin iframe - BLOCK IT
+          antiIframe.style.display = 'flex';
+          document.body.style.overflow = 'hidden';
+          return true;
+        }
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+  
+  // Detect known scrapers (more specific detection)
+  function detectScrapers() {
+    const userAgent = navigator.userAgent.toLowerCase();
+    
+    // Common web scrapers/bots
+    const scraperAgents = [
+      'httrack', 'sitesucker', 'wget', 'curl', 
+      'scrapy', 'python-requests', 'python-urllib',
+      'java/', 'jakarta', 'commons-httpclient',
+      'php/', 'perl', 'ruby', 'mechanize',
+      'libwww', 'lwp', 'simplepie', 'feedfetcher',
+      'googlebot', 'bingbot', 'baiduspider',
+      'yandexbot', 'duckduckbot', 'slurp',
+      'exabot', 'facebot', 'ia_archiver'
+    ];
+    
+    // Check for common scraper patterns
+    for (let agent of scraperAgents) {
+      if (userAgent.includes(agent)) {
+        console.log('Scraper detected:', agent);
+        return true;
+      }
+    }
+    
+    // Check for headless browsers
+    if (navigator.webdriver || 
+        window.chrome && !window.chrome.runtime ||
+        navigator.plugins.length === 0 ||
+        navigator.languages.length === 0) {
+      return true;
+    }
+    
+    return false;
+  }
+  
+  // Anti-devtools detection (only triggers on obvious devtools)
+  function detectDevTools() {
+    // Only show warning for F12/Ctrl+Shift+I
+    return false; // Disable automatic detection for now
+  }
+  
+  // Block right-click for saving
+  document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+    showNotification('warning', 'Right-click Disabled', 'Right-click is disabled on this protected site');
+  });
+  
+  // Block keyboard shortcuts for saving/printing
+  document.addEventListener('keydown', function(e) {
+    // Ctrl+S, Ctrl+Shift+S
+    if ((e.ctrlKey && e.key === 's') || 
+        (e.ctrlKey && e.shiftKey && e.key === 'S')) {
+      e.preventDefault();
+      showNotification('error', 'Save Blocked', 'Saving this page is not allowed');
+      return false;
+    }
+    
+    // Ctrl+P
+    if (e.ctrlKey && e.key === 'p') {
+      e.preventDefault();
+      showNotification('error', 'Print Blocked', 'Printing this page is not allowed');
+      return false;
+    }
+    
+    // F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
+    if (e.key === 'F12' ||
+        (e.ctrlKey && e.shiftKey && e.key === 'I') ||
+        (e.ctrlKey && e.shiftKey && e.key === 'J') ||
+        (e.ctrlKey && e.key === 'U')) {
+      e.preventDefault();
+      devtoolsWarning.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      setTimeout(() => {
+        devtoolsWarning.style.display = 'none';
+        document.body.style.overflow = 'auto';
+      }, 3000);
+      return false;
+    }
+  });
+  
+  // Enhanced DOM protection - only triggers on major modifications
+  let isMonitoring = false;
+  
+  function protectDOM() {
+    if (isMonitoring) return;
+    isMonitoring = true;
+    
+    // Store original page structure
+    const importantElements = [
+      'body', '#nav', '#powered', '#settingsBtn',
+      '#home', '#games', '#customize', '#proxy'
+    ];
+    
+    const originalStates = new Map();
+    
+    // Monitor for iframe injection attempts
+    const observer = new MutationObserver(function(mutations) {
+      for (let mutation of mutations) {
+        // Check for iframe injections
+        if (mutation.addedNodes.length > 0) {
+          for (let node of mutation.addedNodes) {
+            if (node.nodeName === 'IFRAME' || 
+                node.nodeName === 'SCRIPT' ||
+                node.nodeName === 'LINK') {
+              // Check if it's trying to load external content
+              const src = node.src || node.href || '';
+              if (src.includes('http') && !src.includes(window.location.hostname)) {
+                node.remove();
+                antiScraper.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+              }
+            }
+          }
+        }
+      }
+    });
+    
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true
+    });
+  }
+  
+  // Simple watermark protection
+  function addWatermark() {
+    const watermark = document.createElement('div');
+    watermark.id = 'hiddenWatermark';
+    watermark.style.cssText = `
+      position: fixed;
+      bottom: 5px;
+      right: 5px;
+      color: rgba(255,255,255,0.1);
+      font-size: 8px;
+      z-index: 999999;
+      pointer-events: none;
+      user-select: none;
+      font-family: monospace;
+    `;
+    watermark.textContent = `© WGS+ Space Edition - ${window.location.href}`;
+    document.body.appendChild(watermark);
+  }
+  
+  // Initialize protection
+  function initializeProtection() {
+    console.log('Initializing protection system...');
+    
+    // First check for iframe
+    if (detectIframe()) {
+      console.log('Blocked: Iframe detected');
+      return;
+    }
+    
+    // Check for scrapers (but don't block regular users)
+    if (detectScrapers()) {
+      console.log('Scraper detected, but allowing for now...');
+      // Don't block automatically - too many false positives
+    }
+    
+    // Add watermark
+    addWatermark();
+    
+    // Start DOM protection
+    setTimeout(protectDOM, 1000);
+    
+    console.log('Protection system initialized');
+  }
+  
+  // Listen for page load
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeProtection);
+  } else {
+    initializeProtection();
+  }
+  
+  // Make protection functions available
+  window.blockScraper = function() {
+    antiScraper.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  };
+  
+  window.blockIframe = function() {
+    antiIframe.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  };
+  
+  window.showDevToolsWarning = function() {
+    devtoolsWarning.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => {
+      devtoolsWarning.style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }, 3000);
+  };
+})();
+
+// ===== FIREBASE CONFIGURATION =====
+const firebaseConfig = {
+  apiKey: "AIzaSyDDPncxUGpdlDSwdSBJLfHybMXMJ2-yuOU",
+  authDomain: "wgschatworking.firebaseapp.com",
+  databaseURL: "https://wgschatworking-default-rtdb.firebaseio.com",
+  projectId: "wgschatworking",
+  storageBucket: "wgschatworking.firebasestorage.app",
+  messagingSenderId: "296911898673",
+  appId: "1:296911898673:web:5974a2927bf28f0742d10",
+  measurementId: "G-V4XW2KTCTB"
+};
+
+// Initialize Firebase
+const app = firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+const analytics = firebase.analytics();
+
+// ===== GLOBAL VARIABLES =====
+let currentUser = null;
+let userId = null;
+let username = 'Space Cadet';
+let userRef = null;
+let userStatus = 'online';
+let notificationsEnabled = true;
+let favoriteGames = JSON.parse(localStorage.getItem('wgsFavorites')) || [];
+let recentlyPlayed = JSON.parse(localStorage.getItem('wgsRecentlyPlayed')) || [];
+let allGames = [];
+let currentGameFilter = 'all';
+let currentTheme = 'space'; // Start with Space theme
+let starInterval = null;
+let shootingStarInterval = null;
+let countdownInterval = null;
+let proxyLoadingInterval = null;
+
+// ===== SPACESHIP LOADING SCREEN =====
+function initSpaceshipLoading() {
+  const loadingScreen = document.getElementById('spaceshipLoading');
+  const progressBar = document.getElementById('proxyProgressBar');
+  const progressText = document.getElementById('proxyProgressText');
+  
+  if (!loadingScreen) return;
+  
+  let progress = 0;
+  const messages = [
+    "Initializing space portal...",
+    "Calibrating warp drive...",
+    "Syncing with space network...",
+    "Establishing quantum link...",
+    "Preparing for launch...",
+    "Counting down...",
+    "Portal ready!"
+  ];
+  
+  proxyLoadingInterval = setInterval(() => {
+    progress += Math.random() * 15;
+    
+    if (progress >= 100) {
+      progress = 100;
+      clearInterval(proxyLoadingInterval);
+      
+      progressText.textContent = "Portal ready!";
+      
+      setTimeout(() => {
+        loadingScreen.classList.add('fade-out');
+        
+        setTimeout(() => {
+          loadingScreen.style.display = 'none';
+          showNotification('success', '🚀 Space Portal Ready', 'Welcome to the interstellar proxy network!');
+        }, 800);
+      }, 1000);
+    }
+    
+    progressBar.style.width = progress + '%';
+    
+    // Update message based on progress
+    const messageIndex = Math.min(Math.floor(progress / 15), messages.length - 1);
+    progressText.textContent = messages[messageIndex];
+    
+    // Add random spaceship effects
+    if (Math.random() > 0.95) {
+      createShootingStar();
+    }
+    
+  }, 200);
+}
+
+// ===== SPACE BACKGROUND FUNCTIONS =====
+function createStars() {
+  const body = document.body;
+  const starCount = 150;
+  
+  for (let i = 0; i < starCount; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    
+    // Random size between 1-3px
+    const size = Math.random() * 2 + 1;
+    star.style.width = `${size}px`;
+    star.style.height = `${size}px`;
+    
+    // Random position
+    star.style.left = `${Math.random() * 100}vw`;
+    star.style.top = `${Math.random() * 100}vh`;
+    
+    // Random twinkle animation
+    const duration = Math.random() * 4 + 2;
+    const delay = Math.random() * 5;
+    star.style.animationDuration = `${duration}s`;
+    star.style.animationDelay = `${delay}s`;
+    
+    // Random opacity
+    star.style.opacity = Math.random() * 0.7 + 0.3;
+    
+    body.appendChild(star);
+  }
+}
+
+function createShootingStar() {
+  const body = document.body;
+  const shootingStar = document.createElement('div');
+  shootingStar.className = 'shooting-star';
+  
+  // Random starting position
+  const startX = -100;
+  const startY = Math.random() * 50;
+  shootingStar.style.left = `${startX}px`;
+  shootingStar.style.top = `${startY}vh`;
+  
+  // Random duration
+  const duration = Math.random() * 2 + 1;
+  shootingStar.style.animationDuration = `${duration}s`;
+  
+  body.appendChild(shootingStar);
+  
+  // Remove after animation completes
+  setTimeout(() => {
+    if (shootingStar.parentNode) {
+      shootingStar.remove();
+    }
+  }, duration * 1000);
+}
+
+function createPlanets() {
+  const body = document.body;
+  const planetCount = 3;
+  
+  for (let i = 0; i < planetCount; i++) {
+    const planet = document.createElement('div');
+    planet.className = 'planet';
+    
+    // Random size between 100-300px
+    const size = Math.random() * 200 + 100;
+    planet.style.width = `${size}px`;
+    planet.style.height = `${size}px`;
+    
+    // Random position
+    planet.style.left = `${Math.random() * 100}vw`;
+    planet.style.top = `${Math.random() * 100}vh`;
+    
+    // Random color
+    const colors = ['#00e5ff', '#1a237e', '#311b92', '#4a148c'];
+    planet.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    
+    body.appendChild(planet);
+  }
+}
+
+function initSpaceBackground() {
+  createStars();
+  createPlanets();
+  
+  // Create shooting stars periodically
+  shootingStarInterval = setInterval(createShootingStar, 3000);
+  
+  // Refresh stars occasionally
+  starInterval = setInterval(() => {
+    const stars = document.querySelectorAll('.star');
+    stars.forEach(star => {
+      if (Math.random() > 0.7) {
+        star.style.animationDuration = `${Math.random() * 4 + 2}s`;
+        star.style.opacity = Math.random() * 0.7 + 0.3;
+      }
+    });
+  }, 5000);
+}
+
+// ===== COUNTDOWN TIMER =====
+function initCountdownTimer() {
+  const targetDate = new Date('March 27, 2026 00:00:00').getTime();
+  
+  function updateCountdown() {
+    const now = new Date().getTime();
+    const timeRemaining = targetDate - now;
+    
+    if (timeRemaining <= 0) {
+      clearInterval(countdownInterval);
+      document.getElementById('days').textContent = '00';
+      document.getElementById('hours').textContent = '00';
+      document.getElementById('minutes').textContent = '00';
+      document.getElementById('seconds').textContent = '00';
+      
+      if (document.getElementById('proxy').classList.contains('active')) {
+        showNotification('success', '🚀 Portal Activated!', 'The Space Portal is now operational!');
+      }
+      return;
+    }
+    
+    const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+    
+    document.getElementById('days').textContent = days.toString().padStart(2, '0');
+    document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
+    document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
+    document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
+  }
+  
+  updateCountdown();
+  countdownInterval = setInterval(updateCountdown, 1000);
+}
+
+// ===== THEME SYSTEM =====
+function setSpaceTheme() {
+  currentTheme = 'space';
+  document.documentElement.removeAttribute('data-theme');
+  
+  // Update background
+  document.body.style.background = 'linear-gradient(135deg, #000010, #0a0e29, #1a237e)';
+  document.getElementById('powered').textContent = 'WGS+';
+  
+  // Update theme buttons
+  document.querySelectorAll('.theme-option-btn').forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.id === 'spaceThemeBtn') {
+      btn.classList.add('active');
+    }
+  });
+  
+  // Update theme option in customize page
+  document.querySelectorAll('.theme-option').forEach(option => {
+    option.classList.remove('active');
+    if (option.classList.contains('theme-1')) {
+      option.classList.add('active');
+    }
+  });
+  
+  localStorage.setItem('wgsTheme', 'space');
+  showNotification('success', '🌌 Theme Updated', 'Nebula theme activated');
+}
+
+function setDarkSpaceTheme() {
+  currentTheme = 'dark-space';
+  document.documentElement.setAttribute('data-theme', 'dark-space');
+  
+  // Update background
+  document.body.style.background = 'linear-gradient(135deg, #050510, #0f0f23, #1a1a2e)';
+  document.getElementById('powered').textContent = 'WGS+';
+  
+  // Update theme buttons
+  document.querySelectorAll('.theme-option-btn').forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.id === 'darkSpaceThemeBtn') {
+      btn.classList.add('active');
+    }
+  });
+  
+  // Update theme option in customize page
+  document.querySelectorAll('.theme-option').forEach(option => {
+    option.classList.remove('active');
+    if (option.classList.contains('theme-2')) {
+      option.classList.add('active');
+    }
+  });
+  
+  localStorage.setItem('wgsTheme', 'dark-space');
+  showNotification('info', 'Theme Updated', 'Dark Space theme activated');
+}
+
+function clearSpaceElements() {
+  const stars = document.querySelectorAll('.star');
+  stars.forEach(star => star.remove());
+  
+  const shootingStars = document.querySelectorAll('.shooting-star');
+  shootingStars.forEach(star => star.remove());
+  
+  const planets = document.querySelectorAll('.planet');
+  planets.forEach(planet => planet.remove());
+  
+  if (starInterval) {
+    clearInterval(starInterval);
+    starInterval = null;
+  }
+  
+  if (shootingStarInterval) {
+    clearInterval(shootingStarInterval);
+    shootingStarInterval = null;
+  }
+}
+
+// ===== NOTIFICATION SYSTEM =====
+function showNotification(type, title, message) {
+  if (!notificationsEnabled) return;
+  
+  const notifications = document.getElementById('notifications');
+  const notification = document.createElement('div');
+  notification.className = `notification ${type}`;
+  
+  const icon = {
+    info: 'fas fa-info-circle',
+    success: 'fas fa-check-circle',
+    warning: 'fas fa-exclamation-triangle',
+    error: 'fas fa-exclamation-circle'
+  }[type];
+  
+  const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  
+  notification.innerHTML = `
+    <div class="notification-icon">
+      <i class="${icon}"></i>
+    </div>
+    <div class="notification-content">
+      <div class="notification-title">${title}</div>
+      <div class="notification-message">${message}</div>
+      <div class="notification-time">${time}</div>
+    </div>
+  `;
+  
+  notification.onclick = () => {
+    notification.classList.add('slide-out');
+    setTimeout(() => notification.remove(), 300);
+  };
+  
+  notifications.appendChild(notification);
+  
+  setTimeout(() => {
+    if (notification.parentNode) {
+      notification.classList.add('slide-out');
+      setTimeout(() => notification.remove(), 300);
+    }
+  }, 5000);
+}
+
+// ===== SETTINGS SYSTEM =====
+function openSettings() {
+  document.getElementById('settingsModal').style.display = 'flex';
+}
+
+function closeSettings() {
+  document.getElementById('settingsModal').style.display = 'none';
+}
+
+function updateStatus() {
+  const statusSelect = document.getElementById('statusSelect');
+  userStatus = statusSelect.value;
+  
+  if (userRef) {
+    userRef.update({ status: userStatus });
+  }
+  
+  updateStatusIndicator();
+  showNotification('info', 'Status Updated', `You're now ${userStatus}`);
+}
+
+function updateStatusIndicator() {
+  const indicator = document.getElementById('myStatusIndicator');
+  const statusClass = `status-${userStatus}`;
+  indicator.className = `status-indicator ${statusClass}`;
+  
+  const userItem = document.getElementById('myUserItem');
+  userItem.className = `user-item ${userStatus}`;
+  const statusSpan = userItem.querySelector('.status-indicator');
+  statusSpan.className = `status-indicator ${statusClass}`;
+}
+
+function toggleNotifications(enabled) {
+  notificationsEnabled = enabled;
+  showNotification('info', 'Notifications', `Notifications ${enabled ? 'enabled' : 'disabled'}`);
+}
+
+// ===== GAMES SYSTEM =====
+function initGamesPage() {
+  const gamesContent = document.getElementById('gamesPageContent');
+  
+  gamesContent.innerHTML = '';
+  
+  const gamesHTML = `
+    <div class="loading-screen" id="loadingScreen">
+      <div class="gaming-mode-text">SPACE GAMES ACTIVATED</div>
+      <div class="loading-bar">
+        <div class="loading-progress" id="loadingProgress"></div>
+      </div>
+      <div class="loading-percent" id="loadingPercent">0%</div>
+    </div>
+    
+    <header class="game-header-section">
+      <div class="game-logo">
+        <i class="fas fa-gamepad"></i>
+        <h1>WGS+ SPACE GAMES</h1>
+      </div>
+      <div class="status-indicator-game">ONLINE</div>
+    </header>
+    
+    <div class="games-filter">
+      <button class="filter-btn active" onclick="filterGames('all')">All Games</button>
+      <button class="filter-btn" onclick="filterGames('game')">Games Only</button>
+      <button class="filter-btn" onclick="showFavorites()">Favorites</button>
+      <input type="text" class="search-input" id="gameSearch" placeholder="Search space games..." oninput="searchGames()">
+    </div>
+    
+    <div class="games-container" id="gamesContainer"></div>
+    
+    <div class="game-frame-container" id="gameFrameContainer">
+      <div class="game-header-frame">
+        <div class="game-title-frame" id="gameTitleFrame">Game Title</div>
+        <button class="close-game" id="closeGameBtn">
+          <i class="fas fa-times"></i> CLOSE GAME
+        </button>
+      </div>
+      <iframe class="game-frame" id="gameFrame" allowfullscreen></iframe>
+    </div>
+    
+    <footer class="game-footer">
+      <p>WGS+ SPACE GAMES <span>INTERSTELLAR EDITION</span> | ALL SYSTEMS NOMINAL</p>
+      <p>GAMING MODE: <span>ACTIVATED</span></p>
+    </footer>
+  `;
+  
+  gamesContent.innerHTML = gamesHTML;
+  
+  // Updated Game List with your links
+  allGames = [
+    { id: 1, title: "Petezah UPDATED!", desc: "Mmm Pizzzzza", type: "game", url: "https://woah2.biocellerity.com/" },
+    { id: 2, title: "DogeUb update", desc: "is it usb or doge?", type: "game", url: "https://api-services.vise.best/" },
+    { id: 3, title: "Shadow V3", desc: "Light-based puzzle adventure", type: "game", url: "https://epiccalc.eclipsecastello.com/" },
+    { id: 4, title: "Velara", desc: "Is it Ve-lara or Veal-ara?", type: "game", url: "https://wvelara.mastertouch-sarlu.com/" },
+    { id: 5, title: "Petezah", desc: "Fast-paced action game", type: "game", url: "https://tuff.codd70.ru/" },
+    { id: 6, title: "Petezah uptd", desc: "More Pizza", type: "game", url: "https://world1.acmys.cl/" },
+    { id: 7, title: "petezah", desc: "Cosmic Pizza?", type: "game", url: "https://tinyurl.com-slash-aapsrgp.my-ns.com" },
+    { id: 8, title: "Petezah", desc: "Updated!", type: "game", url: "https://woah3.biocellerity.com/" },
+    { id: 9, title: "Shadow V3", desc: "Virtual cloud subscription game", type: "game", url: "https://walterwhite.my-ns.com/" },
+    { id: 10, title: "Truffled", desc: "Good intergalatic bypasser", type: "Emulator", url: "https://mathteachersforhire.shop/" },
+    { id: 11, title: "Vapor V4", desc: "Proxy Cosmic vally", type: "proxy", url: "https://idkm.tokeslaszlo.ro/" },
+    { id: 12, title: "Petezah", desc: "Educational space platform for learning across galaxies", type: "game", url: "https://tuff2.codd70.ru/" },
+    { id: 13, title: "Lunar V2 Updated!", desc: "Canvas-based interstellar gaming experience", type: "game",   url:  "https://stocktrading.thekingdomexchange.com/" }
+  ];
+  
+  simulateLoading();
+  
+  setTimeout(() => {
+    const closeGameBtn = document.getElementById('closeGameBtn');
+    if (closeGameBtn) {
+      closeGameBtn.addEventListener('click', closeGame);
+    }
+  }, 100);
+  
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      const gameFrameContainer = document.getElementById('gameFrameContainer');
+      if (gameFrameContainer && gameFrameContainer.classList.contains('active')) {
+        closeGame();
+      }
+    }
+  });
+}
+
+function simulateLoading() {
+  const loadingScreen = document.getElementById('loadingScreen');
+  const loadingProgress = document.getElementById('loadingProgress');
+  const loadingPercent = document.getElementById('loadingPercent');
+  
+  if (!loadingScreen || !loadingProgress || !loadingPercent) {
+    console.error('Loading screen elements not found');
+    loadGames();
+    return;
+  }
+  
+  let progress = 0;
+  const interval = setInterval(() => {
+    progress += Math.random() * 15;
+    if (progress >= 100) {
+      progress = 100;
+      clearInterval(interval);
+      
+      setTimeout(() => {
+        loadingScreen.classList.add('fade-out');
+        
+        setTimeout(() => {
+          loadingScreen.style.display = 'none';
+          loadGames();
+        }, 500);
+      }, 500);
+    }
+    
+    loadingProgress.style.width = progress + '%';
+    loadingPercent.textContent = Math.round(progress) + '%';
+  }, 100);
+}
+
+function loadGames(filter = 'all', search = '') {
+  const gamesContainer = document.getElementById('gamesContainer');
+  if (!gamesContainer) return;
+  
+  gamesContainer.innerHTML = '';
+  
+  let filteredGames = allGames;
+  
+  if (filter !== 'all') {
+    filteredGames = filteredGames.filter(game => game.type === filter);
+  }
+  
+  if (search) {
+    const searchLower = search.toLowerCase();
+    filteredGames = filteredGames.filter(game => 
+      game.title.toLowerCase().includes(searchLower) || 
+      game.desc.toLowerCase().includes(searchLower)
+    );
+  }
+  
+  filteredGames.forEach((game, index) => {
+    const gameCard = document.createElement('div');
+    gameCard.className = 'game-card';
+    gameCard.style.animationDelay = (index * 0.1) + 's';
+    gameCard.setAttribute('data-id', game.id);
+    
+    const typeColor = 'var(--accent-color)';
+    const isFavorite = favoriteGames.includes(game.id);
+    
+    gameCard.innerHTML = `
+      <button class="favorite-btn ${isFavorite ? 'favorited' : ''}" onclick="toggleFavorite(${game.id})">
+        <i class="fas fa-star"></i>
+      </button>
+      <div class="game-title" style="color: ${typeColor}">${game.title}</div>
+      <div class="game-desc">${game.desc}</div>
+      <div class="game-type" style="background: linear-gradient(135deg, ${typeColor}, #00b8d4)">${game.type.toUpperCase()}</div>
+      <button class="play-button" onclick="openGame(${game.id})">
+        <i class="fas fa-play"></i> LAUNCH GAME
+      </button>
+    `;
+    
+    gamesContainer.appendChild(gameCard);
+  });
+}
+
+function openGame(gameId) {
+  const game = allGames.find(g => g.id === gameId);
+  if (!game) {
+    showNotification('error', 'Game Error', 'Game not found in the space database!');
+    return;
+  }
+  
+  console.log(`Opening game: ${game.title} (${game.url})`);
+  
+  addToRecentlyPlayed(gameId);
+  
+  const gameTitleFrame = document.getElementById('gameTitleFrame');
+  const gameFrame = document.getElementById('gameFrame');
+  const gameFrameContainer = document.getElementById('gameFrameContainer');
+  
+  if (gameTitleFrame) gameTitleFrame.textContent = game.title.toUpperCase();
+  if (gameFrame) {
+    gameFrame.src = '';
+    gameFrame.src = game.url;
+  }
+  if (gameFrameContainer) {
+    gameFrameContainer.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+  
+  showNotification('info', '🎮 Game Launched', `Playing ${game.title}`);
+}
+
+function closeGame() {
+  const gameFrame = document.getElementById('gameFrame');
+  const gameFrameContainer = document.getElementById('gameFrameContainer');
+  
+  if (gameFrame) gameFrame.src = '';
+  if (gameFrameContainer) {
+    gameFrameContainer.classList.remove('active');
+    document.body.style.overflow = 'auto';
+  }
+}
+
+function addToRecentlyPlayed(gameId) {
+  const index = recentlyPlayed.indexOf(gameId);
+  if (index !== -1) {
+    recentlyPlayed.splice(index, 1);
+  }
+  recentlyPlayed.unshift(gameId);
+  
+  if (recentlyPlayed.length > 10) {
+    recentlyPlayed.pop();
+  }
+  
+  localStorage.setItem('wgsRecentlyPlayed', JSON.stringify(recentlyPlayed));
+}
+
+// Global game functions
+window.filterGames = function(filter) {
+  currentGameFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+  const search = document.getElementById('gameSearch')?.value || '';
+  loadGames(filter, search);
+};
+
+window.searchGames = function() {
+  const search = document.getElementById('gameSearch')?.value || '';
+  loadGames(currentGameFilter, search);
+};
+
+window.showFavorites = function() {
+  if (favoriteGames.length === 0) {
+    showNotification('info', '⭐ No Favorites', 'You have no favorite space games yet');
+    return;
+  }
+  
+  const gamesContainer = document.getElementById('gamesContainer');
+  if (!gamesContainer) return;
+  
+  gamesContainer.innerHTML = '';
+  favoriteGames.forEach(gameId => {
+    const game = allGames.find(g => g.id === gameId);
+    if (!game) return;
+    
+    const gameCard = document.createElement('div');
+    gameCard.className = 'game-card';
+    
+    const typeColor = 'var(--accent-color)';
+    
+    gameCard.innerHTML = `
+      <button class="favorite-btn favorited" onclick="toggleFavorite(${game.id})">
+        <i class="fas fa-star"></i>
+      </button>
+      <div class="game-title" style="color: ${typeColor}">${game.title}</div>
+      <div class="game-desc">${game.desc}</div>
+      <div class="game-type" style="background: linear-gradient(135deg, ${typeColor}, #00b8d4)">${game.type.toUpperCase()}</div>
+      <button class="play-button" onclick="openGame(${game.id})">
+        <i class="fas fa-play"></i> LAUNCH GAME
+      </button>
+    `;
+    
+    gamesContainer.appendChild(gameCard);
+  });
+  
+  document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+  currentGameFilter = 'favorites';
+};
+
+window.toggleFavorite = function(gameId) {
+  const index = favoriteGames.indexOf(gameId);
+  if (index === -1) {
+    favoriteGames.push(gameId);
+    showNotification('success', '⭐ Added to Favorites', 'Game added to your space favorites');
+  } else {
+    favoriteGames.splice(index, 1);
+    showNotification('info', '⭐ Removed from Favorites', 'Game removed from space favorites');
+  }
+  
+  localStorage.setItem('wgsFavorites', JSON.stringify(favoriteGames));
+  
+  const gameCard = document.querySelector(`.game-card[data-id="${gameId}"]`);
+  if (gameCard) {
+    const favoriteBtn = gameCard.querySelector('.favorite-btn');
+    if (favoriteBtn) {
+      favoriteBtn.classList.toggle('favorited');
+    }
+  }
+  
+  if (currentGameFilter === 'favorites') {
+    showFavorites();
+  }
+};
+
+window.openGame = openGame;
+
+// ===== CUSTOMIZE THEME =====
+function changeTheme(themeClass) {
+  document.querySelectorAll('.theme-option').forEach(option => {
+    option.classList.remove('active');
+  });
+  
+  event.target.classList.add('active');
+  
+  switch(themeClass) {
+    case 'theme-1': // Nebula
+      setSpaceTheme();
+      break;
+    case 'theme-2': // Dark Space
+      setDarkSpaceTheme();
+      break;
+    case 'theme-3':
+      // Purple Nebula theme
+      document.body.style.background = 'linear-gradient(135deg, #1a0b2e, #4a1e6e, #6a2c9e)';
+      clearSpaceElements();
+      document.getElementById('powered').textContent = 'WGS+';
+      localStorage.setItem('wgsTheme', 'theme-3');
+      break;
+    case 'theme-4':
+      // Ocean Space theme
+      document.body.style.background = 'linear-gradient(135deg, #00224d, #00509d, #1e96fc)';
+      clearSpaceElements();
+      document.getElementById('powered').textContent = 'WGS+';
+      localStorage.setItem('wgsTheme', 'theme-4');
+      break;
+    case 'theme-5':
+      // Pink Nebula theme
+      document.body.style.background = 'linear-gradient(135deg, #2d0b2e, #5e1d6e, #8f2e9e)';
+      clearSpaceElements();
+      document.getElementById('powered').textContent = 'WGS+';
+      localStorage.setItem('wgsTheme', 'theme-5');
+      break;
+    case 'theme-6':
+      // Void Space theme
+      document.body.style.background = 'linear-gradient(135deg, #0f0f23, #1a1a2e, #2d2d44)';
+      clearSpaceElements();
+      document.getElementById('powered').textContent = 'WGS+';
+      localStorage.setItem('wgsTheme', 'theme-6');
+      break;
+  }
+}
+
+// ===== ENHANCED PARTICLES BACKGROUND =====
+const canvas = document.getElementById('particles');
+const ctx = canvas.getContext('2d');
+let particlesArray = [];
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+class Particle {
+  constructor() {
+    this.x = Math.random() * canvas.width;
+    this.y = Math.random() * canvas.height;
+    this.size = Math.random() * 2 + 0.5;
+    this.speedX = Math.random() * 0.5 - 0.25;
+    this.speedY = Math.random() * 0.5 - 0.25;
+    this.color = currentTheme === 'space' ? 
+      `rgba(0, 229, 255, ${Math.random() * 0.1 + 0.05})` : 
+      `rgba(0, 255, 157, ${Math.random() * 0.08 + 0.02})`;
+  }
+  
+  update() {
+    this.x += this.speedX;
+    this.y += this.speedY;
+    
+    if (this.x > canvas.width) this.x = 0;
+    if (this.x < 0) this.x = canvas.width;
+    if (this.y > canvas.height) this.y = 0;
+    if (this.y < 0) this.y = canvas.height;
+  }
+  
+  draw() {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.fillStyle = this.color;
+    ctx.fill();
+  }
+}
+
+function initParticles() {
+  particlesArray = [];
+  const numberOfParticles = (canvas.width * canvas.height) / 12000;
+  
+  for (let i = 0; i < numberOfParticles; i++) {
+    particlesArray.push(new Particle());
+  }
+}
+
+function animateParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  for (let i = 0; i < particlesArray.length; i++) {
+    for (let j = i + 1; j < particlesArray.length; j++) {
+      const dx = particlesArray[i].x - particlesArray[j].x;
+      const dy = particlesArray[i].y - particlesArray[j].y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      if (distance < 60) {
+        ctx.beginPath();
+        ctx.strokeStyle = currentTheme === 'space' ? 
+          `rgba(0, 229, 255, ${0.02 * (1 - distance / 60)})` : 
+          `rgba(0, 255, 157, ${0.015 * (1 - distance / 60)})`;
+        ctx.lineWidth = 0.1;
+        ctx.moveTo(particlesArray[i].x, particlesArray[i].y);
+        ctx.lineTo(particlesArray[j].x, particlesArray[j].y);
+        ctx.stroke();
+      }
+    }
+  }
+  
+  particlesArray.forEach(particle => {
+    particle.update();
+    particle.draw();
+  });
+  
+  requestAnimationFrame(animateParticles);
+}
+
+initParticles();
+animateParticles();
+
+// ===== NAVIGATION SYSTEM =====
+function showPage(id, btn) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  document.querySelectorAll(".navBtn").forEach(b => b.classList.remove("active"));
+  if (btn) btn.classList.add("active");
+  document.getElementById("powered").style.display = id === "home" ? "flex" : "none";
+  
+  if (id === "proxy") {
+    document.getElementById("nav").style.display = "none";
+    document.getElementById("goBackBtn").style.display = "flex";
+    if (id === "proxy") {
+      initCountdownTimer();
+      // Show spaceship loading screen
+      const loadingScreen = document.getElementById('spaceshipLoading');
+      if (loadingScreen) {
+        loadingScreen.style.display = 'flex';
+        loadingScreen.classList.remove('fade-out');
+        setTimeout(initSpaceshipLoading, 500);
+      }
+    }
+  } else {
+    document.getElementById("nav").style.display = "flex";
+    document.getElementById("goBackBtn").style.display = "none";
+  }
+  
+  if (id === "games") {
+    if (!window.gamesInitialized) {
+      initGamesPage();
+      window.gamesInitialized = true;
+    } else {
+      const gamesContent = document.getElementById('gamesPageContent');
+      if (gamesContent && gamesContent.innerHTML.trim() === '') {
+        initGamesPage();
+      }
+    }
+  }
+}
+
+function goBackToHome() {
+  document.getElementById("goBackBtn").style.display = "none";
+  document.getElementById("nav").style.display = "flex";
+  
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.getElementById("home").classList.add("active");
+  document.querySelectorAll(".navBtn").forEach(b => b.classList.remove("active"));
+  document.querySelector('.navBtn[onclick*="home"]').classList.add("active");
+  document.getElementById("powered").style.display = "flex";
+}
+
+// ===== INITIALIZE ON LOAD =====
+window.addEventListener('load', () => {
+  const savedTheme = localStorage.getItem('wgsTheme');
+  if (savedTheme === 'dark-space') {
+    setDarkSpaceTheme();
+  } else {
+    setSpaceTheme();
+  }
+  
+  initSpaceBackground();
+  
+  const savedStatus = localStorage.getItem('wgsStatus');
+  if (savedStatus) {
+    userStatus = savedStatus;
+    updateStatusIndicator();
+  }
+  
+  const statusSelect = document.getElementById('statusSelect');
+  if (statusSelect) {
+    statusSelect.value = userStatus;
+  }
+  
+  setTimeout(() => {
+    document.getElementById('update').style.display = 'none';
+  }, 3000);
+  
+  if (window.location.hash === '#chat') {
+    showPage('chat', document.querySelector('.navBtn[onclick*="chat"]'));
+  }
+  
+  setTimeout(() => {
+    showNotification('info', '🚀 Welcome to WGs+ Space Edition!', 'Explore the cosmos with our space-themed interface!');
+  }, 1000);
+});
+
+// Make functions globally available
+window.setSpaceTheme = setSpaceTheme;
+window.setDarkSpaceTheme = setDarkSpaceTheme;
+window.updateStatus = updateStatus;
+window.toggleNotifications = toggleNotifications;
+
+// MANUAL TRIGGER FOR TESTING - REMOVE THIS IN PRODUCTION
+window.testAntiScraper = function() {
+  document.getElementById('antiScraper').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+};
+
+window.testAntiIframe = function() {
+  document.getElementById('antiIframe').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+};
+</script>
+</body>
+</html>
